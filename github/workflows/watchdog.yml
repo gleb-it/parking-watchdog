@@ -1,0 +1,25 @@
+name: Parking Monitor Watchdog
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'      # каждые ~15 минут (GitHub может задерживать запуск — это норма)
+  workflow_dispatch:            # кнопка ручного запуска (для проверки)
+
+# не запускать несколько параллельно
+concurrency:
+  group: watchdog
+  cancel-in-progress: false
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run watchdog
+        env:
+          SERVER_URL: ${{ secrets.SERVER_URL }}
+          CD_API_KEY: ${{ secrets.CD_API_KEY }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          RUN_MODE: ${{ github.event_name }}
+        run: python3 watchdog.py
